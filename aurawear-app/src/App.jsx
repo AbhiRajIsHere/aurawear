@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 
 // ═══════════════════════════════════════════════════════════
 // DATA LAYER
@@ -454,24 +454,10 @@ export default function AuraWear() {
   const [analyzing, setAnalyzing] = useState(false);
   const [analyzed, setAnalyzed] = useState(null);
   const [searchQ, setSearchQ] = useState("");
-  const [showFeedback, setShowFeedback] = useState(false);
-  const [fbName, setFbName] = useState("");
-  const [fbRating, setFbRating] = useState(0);
-  const [fbText, setFbText] = useState("");
-  const [fbFeatures, setFbFeatures] = useState([]);
-  const [fbSubmitted, setFbSubmitted] = useState(false);
   const scrollRef = useRef(null);
 
-  const toggleFbFeature = (f) => setFbFeatures(prev => prev.includes(f) ? prev.filter(x => x !== f) : [...prev, f]);
-  const submitFeedback = () => {
-    const data = { name: fbName, rating: fbRating, features: fbFeatures, feedback: fbText, timestamp: new Date().toISOString() };
-    // In production: send to your backend / Google Sheets / Firebase
-    console.log("FEEDBACK:", JSON.stringify(data, null, 2));
-    // Copy to clipboard as backup
-    navigator.clipboard?.writeText(JSON.stringify(data, null, 2)).catch(() => {});
-    setFbSubmitted(true);
-    setTimeout(() => { setFbSubmitted(false); setShowFeedback(false); setFbName(""); setFbRating(0); setFbText(""); setFbFeatures([]); }, 2500);
-  };
+  const FEEDBACK_URL = "https://docs.google.com/forms/d/e/1FAIpQLScxNn5bJzZHywxNRaf-yr3dcebhJhmYKjCcVI0rz58-3_RBYg/viewform";
+  const openFeedback = () => window.open(FEEDBACK_URL, "_blank");
 
   const shuffle = () => setOutfit(generateOutfit(occasion, wardrobe));
   const changeOccasion = (o) => { setOccasion(o); setOutfit(generateOutfit(o, wardrobe)); };
@@ -598,7 +584,7 @@ export default function AuraWear() {
           }}>PROTOTYPE</span>
           <span style={{ fontSize: 11, color: "var(--muted)" }}>Tap 💬 to share your thoughts</span>
         </div>
-        <button onClick={() => setShowFeedback(true)} style={{
+        <button onClick={openFeedback} style={{
           padding: "4px 12px", borderRadius: 8, fontSize: 10, fontWeight: 700,
           background: "rgba(200,170,120,0.15)", border: "1px solid rgba(200,170,120,0.25)",
           color: "var(--gold)", cursor: "pointer", fontFamily: "var(--body)"
@@ -1413,7 +1399,7 @@ export default function AuraWear() {
               <div style={{ fontSize: 13, color: "var(--muted)", lineHeight: 1.6, marginBottom: 16, maxWidth: 300, margin: "0 auto 16px" }}>
                 This is just the beginning. Your feedback decides which features we build first. Tap below and be brutally honest.
               </div>
-              <button onClick={() => setShowFeedback(true)} style={{
+              <button onClick={openFeedback} style={{
                 padding: "14px 32px", borderRadius: 14, fontSize: 15, fontWeight: 700,
                 background: "linear-gradient(135deg, var(--gold), #a08960)", color: "#0c0b09",
                 border: "none", cursor: "pointer", fontFamily: "var(--body)",
@@ -1431,143 +1417,18 @@ export default function AuraWear() {
       </div>
 
       {/* ═══════ FEEDBACK FLOATING BUTTON ═══════ */}
-      {!showFeedback && (
-        <button onClick={() => setShowFeedback(true)} style={{
-          position: "fixed", bottom: 70, right: 16, zIndex: 20,
-          width: 48, height: 48, borderRadius: 16, border: "none",
-          background: "linear-gradient(135deg, var(--gold), #a08960)",
-          color: "#0c0b09", fontSize: 20, cursor: "pointer",
-          boxShadow: "0 4px 20px rgba(200,170,120,0.4)", display: "flex",
-          alignItems: "center", justifyContent: "center", animation: "glow 3s ease-in-out infinite",
-          transition: "transform 0.2s"
-        }}
-          onMouseEnter={e => e.currentTarget.style.transform = "scale(1.1)"}
-          onMouseLeave={e => e.currentTarget.style.transform = "scale(1)"}
-        >💬</button>
-      )}
-
-      {/* ═══════ FEEDBACK PANEL ═══════ */}
-      {showFeedback && (
-        <div style={{
-          position: "fixed", inset: 0, zIndex: 100,
-          background: "rgba(0,0,0,0.7)", backdropFilter: "blur(8px)",
-          display: "flex", alignItems: "flex-end", justifyContent: "center",
-          animation: "fadeIn 0.2s ease-out"
-        }} onClick={(e) => { if (e.target === e.currentTarget) setShowFeedback(false); }}>
-          <div style={{
-            width: "100%", maxWidth: 460, maxHeight: "85vh", overflowY: "auto",
-            background: "#141310", borderRadius: "24px 24px 0 0",
-            border: "1px solid rgba(200,170,120,0.15)", borderBottom: "none",
-            padding: "24px 20px 32px", animation: "fadeUp 0.3s ease-out"
-          }}>
-            {fbSubmitted ? (
-              <div style={{ textAlign: "center", padding: "40px 0" }}>
-                <div style={{ fontSize: 48, marginBottom: 12 }}>🙏</div>
-                <div style={{ fontFamily: "var(--display)", fontSize: 22, fontWeight: 800, color: "var(--gold)", marginBottom: 6 }}>Thank You!</div>
-                <div style={{ fontSize: 13, color: "var(--muted)" }}>Your feedback is incredibly valuable to us.</div>
-              </div>
-            ) : (
-              <>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
-                  <div>
-                    <div style={{ fontFamily: "var(--display)", fontSize: 20, fontWeight: 800, color: "var(--gold)" }}>Share Feedback</div>
-                    <div style={{ fontSize: 11, color: "var(--muted)", marginTop: 2 }}>Help us build the perfect wardrobe app</div>
-                  </div>
-                  <button onClick={() => setShowFeedback(false)} style={{
-                    width: 32, height: 32, borderRadius: 10, border: "1px solid var(--border)",
-                    background: "transparent", color: "var(--muted)", cursor: "pointer", fontSize: 16,
-                    display: "flex", alignItems: "center", justifyContent: "center"
-                  }}>✕</button>
-                </div>
-
-                {/* Name */}
-                <div style={{ marginBottom: 16 }}>
-                  <label style={{ fontSize: 11, color: "var(--muted)", fontWeight: 600, letterSpacing: 0.5, marginBottom: 6, display: "block" }}>YOUR NAME</label>
-                  <input value={fbName} onChange={e => setFbName(e.target.value)} placeholder="Enter your name..."
-                    style={{
-                      width: "100%", padding: "11px 14px", borderRadius: 12, fontSize: 14,
-                      background: "rgba(0,0,0,0.3)", border: "1px solid var(--border)",
-                      color: "var(--text)", fontFamily: "var(--body)"
-                    }} />
-                </div>
-
-                {/* Rating */}
-                <div style={{ marginBottom: 16 }}>
-                  <label style={{ fontSize: 11, color: "var(--muted)", fontWeight: 600, letterSpacing: 0.5, marginBottom: 8, display: "block" }}>OVERALL IMPRESSION</label>
-                  <div style={{ display: "flex", gap: 6 }}>
-                    {[1,2,3,4,5].map(i => (
-                      <button key={i} onClick={() => setFbRating(i)} style={{
-                        flex: 1, padding: "12px 0", borderRadius: 12, fontSize: 22,
-                        border: fbRating >= i ? "1px solid var(--gold)" : "1px solid var(--border)",
-                        background: fbRating >= i ? "rgba(200,170,120,0.12)" : "rgba(0,0,0,0.2)",
-                        cursor: "pointer", transition: "all 0.2s"
-                      }}>
-                        {fbRating >= i ? "★" : "☆"}
-                      </button>
-                    ))}
-                  </div>
-                  <div style={{ textAlign: "center", fontSize: 11, color: "var(--gold)", marginTop: 6, fontWeight: 600, minHeight: 16 }}>
-                    {fbRating === 1 && "Needs a lot of work"}
-                    {fbRating === 2 && "Has potential"}
-                    {fbRating === 3 && "Pretty good concept"}
-                    {fbRating === 4 && "Really impressive!"}
-                    {fbRating === 5 && "I would use this daily!"}
-                  </div>
-                </div>
-
-                {/* Feature Rating */}
-                <div style={{ marginBottom: 16 }}>
-                  <label style={{ fontSize: 11, color: "var(--muted)", fontWeight: 600, letterSpacing: 0.5, marginBottom: 8, display: "block" }}>MOST USEFUL FEATURES (select all that apply)</label>
-                  <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-                    {[
-                      "Daily Outfit Suggestions", "Weather-Based Picks", "Shopping Advisor",
-                      "Link Analyzer (Buy/Skip)", "Wardrobe Gap Analysis", "Outfit Calendar",
-                      "Cost Per Wear Stats", "Smart Import", "Color Analytics"
-                    ].map(f => (
-                      <button key={f} onClick={() => toggleFbFeature(f)} style={{
-                        padding: "7px 14px", borderRadius: 20, fontSize: 11, fontWeight: 600,
-                        border: fbFeatures.includes(f) ? "1px solid var(--gold)" : "1px solid var(--border)",
-                        background: fbFeatures.includes(f) ? "rgba(200,170,120,0.14)" : "transparent",
-                        color: fbFeatures.includes(f) ? "var(--gold)" : "var(--dim)",
-                        cursor: "pointer", transition: "all 0.2s", fontFamily: "var(--body)"
-                      }}>{fbFeatures.includes(f) ? "✓ " : ""}{f}</button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Open Feedback */}
-                <div style={{ marginBottom: 20 }}>
-                  <label style={{ fontSize: 11, color: "var(--muted)", fontWeight: 600, letterSpacing: 0.5, marginBottom: 6, display: "block" }}>SUGGESTIONS & IDEAS</label>
-                  <textarea value={fbText} onChange={e => setFbText(e.target.value)}
-                    placeholder="What would make you download this app? Any features you'd add or change? Be brutally honest — we want the truth!"
-                    rows={4}
-                    style={{
-                      width: "100%", padding: "12px 14px", borderRadius: 12, fontSize: 13,
-                      background: "rgba(0,0,0,0.3)", border: "1px solid var(--border)",
-                      color: "var(--text)", fontFamily: "var(--body)", resize: "vertical",
-                      lineHeight: 1.5
-                    }} />
-                </div>
-
-                {/* Submit */}
-                <button onClick={submitFeedback} disabled={!fbRating} style={{
-                  width: "100%", padding: "14px", borderRadius: 14, fontSize: 15, fontWeight: 700,
-                  background: fbRating ? "linear-gradient(135deg, var(--gold), #a08960)" : "#333",
-                  color: fbRating ? "#0c0b09" : "#666", border: "none",
-                  cursor: fbRating ? "pointer" : "not-allowed", fontFamily: "var(--body)",
-                  transition: "all 0.3s", letterSpacing: 0.5
-                }}>
-                  Submit Feedback →
-                </button>
-
-                <div style={{ textAlign: "center", fontSize: 10, color: "var(--dim)", marginTop: 10 }}>
-                  Built with ♠ by AURAWEAR · Feedback is anonymous
-                </div>
-              </>
-            )}
-          </div>
-        </div>
-      )}
+      <button onClick={openFeedback} style={{
+        position: "fixed", bottom: 70, right: 16, zIndex: 20,
+        width: 48, height: 48, borderRadius: 16, border: "none",
+        background: "linear-gradient(135deg, var(--gold), #a08960)",
+        color: "#0c0b09", fontSize: 20, cursor: "pointer",
+        boxShadow: "0 4px 20px rgba(200,170,120,0.4)", display: "flex",
+        alignItems: "center", justifyContent: "center", animation: "glow 3s ease-in-out infinite",
+        transition: "transform 0.2s"
+      }}
+        onMouseEnter={e => e.currentTarget.style.transform = "scale(1.1)"}
+        onMouseLeave={e => e.currentTarget.style.transform = "scale(1)"}
+      >💬</button>
 
       {/* ═══════ BOTTOM NAV ═══════ */}
       <div style={{
